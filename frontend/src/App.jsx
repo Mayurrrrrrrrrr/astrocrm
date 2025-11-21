@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import ChatWindow from './components/chat/ChatWindow';
 import VastuCompass from './components/maps/VastuCompass';
+import VastuPage from './pages/VastuPage';
+import Resources from './pages/Resources';
+import PanchangWidget from './components/panchang/PanchangWidget';
 
 // --- Mock Data (Still used for Chat/History until we build those APIs) ---
 const RECENT_CHATS = [
@@ -33,9 +36,10 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, toggleSidebar }) => {
     { id: 'dashboard', label: 'Dashboard', icon: <Users size={20} /> },
     { id: 'chat', label: 'Live Consult', icon: <MessageSquare size={20} /> },
     { id: 'kundli', label: 'Kundli', icon: <FileText size={20} /> },
+    { id: 'resources', label: 'Resources', icon: <FileText size={20} /> },
     { id: 'history', label: 'History', icon: <Clock size={20} /> },
     { id: 'earnings', label: 'Earnings', icon: <IndianRupee size={20} /> },
-    { id: 'schedule', label: 'Availability', icon: <Calendar size={20} /> },
+    { id: 'vastu', label: 'Vastu', icon: <Calendar size={20} /> },
     { id: 'settings', label: 'Profile & Rates', icon: <Settings size={20} /> },
   ];
 
@@ -198,6 +202,18 @@ const LiveConsultation = () => {
 
 const DashboardHome = ({ astrologer }) => {
   const [isOnline, setIsOnline] = useState(astrologer?.is_online || false);
+  const [quote, setQuote] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get('/api/content/quote/today/')
+        if (res.data && res.data.text) setQuote(res.data)
+      } catch (e) {
+        setQuote(null)
+      }
+    })()
+  }, [])
 
   if (!astrologer) {
     return <div className="p-8 text-center">Loading Astrologer Profile...</div>;
@@ -205,6 +221,13 @@ const DashboardHome = ({ astrologer }) => {
 
   return (
     <div className="space-y-6">
+      {quote && (
+        <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl">
+          <p className="text-slate-800 text-sm">“{quote.text}”</p>
+          <p className="text-slate-500 text-xs mt-1">— {quote.author_name || 'Unknown'}</p>
+        </div>
+      )}
+      <PanchangWidget />
       {/* Header Stats */}
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
@@ -328,9 +351,10 @@ const App = () => {
           {activeTab === 'dashboard' && <DashboardHome astrologer={astrologerData} />}
           {activeTab === 'chat' && <ChatWindow roomName="demo" />}
           {activeTab === 'kundli' && <KundliForm />}
+          {activeTab === 'resources' && <Resources />}
           {activeTab === 'history' && <div className="text-center p-10 text-slate-400">History Module Placeholder</div>}
           {activeTab === 'earnings' && <div className="text-center p-10 text-slate-400">Earnings Module Placeholder</div>}
-          {activeTab === 'schedule' && <VastuCompass />}
+          {activeTab === 'vastu' && <VastuPage />}
           {activeTab === 'settings' && <div className="text-center p-10 text-slate-400">Settings Module Placeholder</div>}
         </div>
       </main>
