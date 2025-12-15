@@ -17,10 +17,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
     
-    # --- CRITICAL FIX: This connects your Accounts App ---
+    # API URLs
     path('api/accounts/', include('accounts.urls')),
     path('api/kundli/', include('kundli.urls')),
     path('api/consultation/', include('consultation.urls')),
+    path('api/consultations/', include('consultations.urls')),
 ]
 
 # --- 3. Serve Media Files in Development ---

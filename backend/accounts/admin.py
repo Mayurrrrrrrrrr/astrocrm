@@ -1,32 +1,29 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, AstrologerProfile
+from django.contrib.auth import get_user_model
+from .models import OTP, AstrologerProfile
 
-# 1. Create an "Inline" view
-# This tells Django to show the Profile fields inside the User page
-class AstrologerProfileInline(admin.StackedInline):
-    model = AstrologerProfile
-    can_delete = False
-    verbose_name_plural = 'Astrologer Profile'
+User = get_user_model()
 
-# 2. Customize the User Admin
-class UserAdmin(BaseUserAdmin):
-    inlines = [AstrologerProfileInline] # Add the profile here
-    
-    # Add your custom fields (is_astrologer, phone) to the User form
-    fieldsets = BaseUserAdmin.fieldsets + (
-        ('Extra Details', {'fields': ('is_astrologer', 'phone_number', 'wallet_balance')}),
-    )
-    add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ('Extra Details', {'fields': ('is_astrologer', 'phone_number')}),
-    )
 
-# 3. Register the User with the new settings
-admin.site.register(User, UserAdmin)
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['phone_number', 'first_name', 'role', 'is_active', 'date_joined']
+    list_filter = ['role', 'is_active', 'is_staff']
+    search_fields = ['phone_number', 'first_name', 'last_name', 'email']
+    ordering = ['-date_joined']
 
-# 4. Keep the separate list view as well
+
+@admin.register(OTP)
+class OTPAdmin(admin.ModelAdmin):
+    list_display = ['phone_number', 'otp', 'is_verified', 'attempts', 'created_at']
+    list_filter = ['is_verified']
+    search_fields = ['phone_number']
+    ordering = ['-created_at']
+
+
 @admin.register(AstrologerProfile)
 class AstrologerProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'expertise', 'rating', 'is_online', 'chat_rate')
-    list_filter = ('is_online', 'expertise')
-    search_fields = ('user__username', 'expertise')
+    list_display = ['display_name', 'user', 'verification_status', 'is_online', 'rating', 'total_consultations']
+    list_filter = ['verification_status', 'is_online']
+    search_fields = ['display_name', 'user__phone_number']
+    ordering = ['-created_at']
