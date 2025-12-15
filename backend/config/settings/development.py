@@ -6,7 +6,7 @@ from .base import *
 DEBUG = True
 SECRET_KEY = 'django-insecure-dev-key-change-in-production-!@#$'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']  # 10.0.2.2 for Android emulator
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '10.0.2.2']  # Allow all for local network access
 
 # Database
 DATABASES = {

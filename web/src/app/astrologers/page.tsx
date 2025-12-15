@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // Added router
+import toast from "react-hot-toast";
 
+// --- Types ---
 interface Astrologer {
     id: number;
     display_name: string;
-    first_name: string;
-    profile_pic: string | null;
     expertise: string[];
     languages: string[];
     experience_years: number;
@@ -18,27 +19,50 @@ interface Astrologer {
     total_consultations: number;
 }
 
-const EXPERTISE_OPTIONS = [
-    "All", "Vedic", "Tarot", "Numerology", "Palmistry", "Vastu",
-    "Kundli", "Horoscope", "Lal Kitab", "Career", "Finance"
-];
+const EXPERTISE_OPTIONS = ["All", "Vedic", "Tarot", "Numerology", "Palmistry", "Vastu", "Love"];
+const LANGUAGE_OPTIONS = ["All", "English", "Hindi", "Tamil", "Marathi", "Gujarati"];
 
-const LANGUAGE_OPTIONS = ["All", "Hindi", "English", "Tamil", "Bengali", "Marathi", "Gujarati"];
+// --- Components ---
+
+// 1. Beautiful Skeleton Loader Component
+const AstrologerSkeleton = () => (
+    <div className="glass rounded-2xl p-6 animate-pulse border border-white/5">
+        <div className="flex items-center gap-4 mb-4">
+            <div className="w-16 h-16 rounded-full bg-white/10"></div>
+            <div className="flex-1 space-y-2">
+                <div className="h-4 bg-white/10 rounded w-3/4"></div>
+                <div className="h-3 bg-white/10 rounded w-1/2"></div>
+            </div>
+        </div>
+        <div className="flex gap-2 mb-4">
+            <div className="h-6 w-16 bg-white/10 rounded-full"></div>
+            <div className="h-6 w-16 bg-white/10 rounded-full"></div>
+        </div>
+        <div className="h-10 bg-white/10 rounded-xl mt-4"></div>
+    </div>
+);
 
 export default function AstrologersPage() {
+    const router = useRouter(); // Initialize router
     const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
 
     // Filters
     const [selectedExpertise, setSelectedExpertise] = useState("All");
     const [selectedLanguage, setSelectedLanguage] = useState("All");
-    const [onlineOnly, setOnlineOnly] = useState(false);
     const [sortBy, setSortBy] = useState("-rating");
 
+    // Use Environment Variable for API URL (Best Practice)
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
     useEffect(() => {
-        fetchAstrologers();
-    }, [selectedExpertise, selectedLanguage, onlineOnly, sortBy]);
+        // Debounce fetching to prevent API spam when changing filters rapidly
+        const timer = setTimeout(() => {
+            fetchAstrologers();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [selectedExpertise, selectedLanguage, sortBy]);
 
     const fetchAstrologers = async () => {
         setLoading(true);
@@ -46,254 +70,191 @@ export default function AstrologersPage() {
             const params = new URLSearchParams();
             if (selectedExpertise !== "All") params.append("expertise", selectedExpertise);
             if (selectedLanguage !== "All") params.append("language", selectedLanguage);
-            if (onlineOnly) params.append("online", "true");
             params.append("order", sortBy);
 
-            const response = await fetch(
-                `http://localhost:8000/api/accounts/astrologers/?${params.toString()}`
-            );
+            const response = await fetch(`${API_URL}/accounts/astrologers/?${params.toString()}`);
+
+            if (!response.ok) throw new Error("Server error");
+
             const data = await response.json();
             setAstrologers(data.results || []);
         } catch (err) {
-            setError("Failed to load astrologers");
+            toast.error("Could not load astrologers. Is the backend running?");
+            // Use dummy data for display if backend fails (Development fallback)
+            setAstrologers([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "online": return "bg-green-500";
-            case "busy": return "bg-yellow-500";
-            default: return "bg-gray-500";
-        }
-    };
+    // --- New Chat Handler ---
+    const handleChat = async (astrologerId: number, chatRate: number) => {
+        const token = localStorage.getItem("accessToken");
 
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case "online": return "Online";
-            case "busy": return "Busy";
-            default: return "Offline";
+        if (!token) {
+            toast.error("Please login to start a chat");
+            router.push("/auth/login");
+            return;
+        }
+
+        const toastId = toast.loading("Starting secure session...");
+
+        try {
+            const response = await fetch(`${API_URL}/consultations/start/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    astrologer_id: astrologerId,
+                    type: "chat"
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.error?.includes("Insufficient balance")) {
+                    toast.error(`Insufficient balance. Required: ₹${chatRate * 5}`, { id: toastId });
+                    // router.push("/wallet"); // TODO: Add wallet page
+                } else {
+                    toast.error(data.error || "Failed to start chat", { id: toastId });
+                }
+                return;
+            }
+
+            toast.success("Session started!", { id: toastId });
+            router.push(`/chat/${data.id}`);
+
+        } catch (err) {
+            console.error(err);
+            toast.error("Network error", { id: toastId });
         }
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background via-background-secondary to-surface">
-            {/* Header */}
-            <header className="border-b border-glass-border backdrop-blur-xl bg-background/80 sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <motion.div
-                            className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                        >
-                            <span className="text-2xl text-white">✦</span>
-                        </motion.div>
-                        <span className="text-2xl font-bold gradient-text">AstroCRM</span>
-                    </Link>
-                    <nav className="flex items-center gap-4">
-                        <Link href="/astrologers" className="text-primary font-medium hidden sm:inline-block">
-                            Astrologers
-                        </Link>
-                        <Link href="/auth/login" className="px-5 py-2.5 glass rounded-full text-white text-sm font-medium hover:border-primary/50 transition-all">
-                            Login
-                        </Link>
-                    </nav>
-                </div>
-            </header>
-
             <main className="container mx-auto px-4 py-8">
-                {/* Title */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-10"
-                >
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-                        Find Your <span className="gradient-text">Perfect Astrologer</span>
-                    </h1>
-                    <p className="text-gray-300 text-lg">
-                        Connect with verified experts for personalized guidance
-                    </p>
-                </motion.div>
-
-                {/* Filters */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="glass rounded-2xl p-6 mb-10 shadow-xl"
-                >
-                    <div className="flex flex-wrap gap-4 items-center">
-                        {/* Expertise Filter */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="text-gray-400 text-sm mb-1 block">Expertise</label>
-                            <select
-                                value={selectedExpertise}
-                                onChange={(e) => setSelectedExpertise(e.target.value)}
-                                className="w-full bg-surface border border-glass-border rounded-xl px-4 py-3 text-white outline-none focus:border-primary"
-                            >
-                                {EXPERTISE_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Language Filter */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="text-gray-400 text-sm mb-1 block">Language</label>
-                            <select
-                                value={selectedLanguage}
-                                onChange={(e) => setSelectedLanguage(e.target.value)}
-                                className="w-full bg-surface border border-glass-border rounded-xl px-4 py-3 text-white outline-none focus:border-primary"
-                            >
-                                {LANGUAGE_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Sort By */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="text-gray-400 text-sm mb-1 block">Sort By</label>
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="w-full bg-surface border border-glass-border rounded-xl px-4 py-3 text-white outline-none focus:border-primary"
-                            >
-                                <option value="-rating">Highest Rated</option>
-                                <option value="chat_rate">Price: Low to High</option>
-                                <option value="-chat_rate">Price: High to Low</option>
-                                <option value="-experience_years">Most Experienced</option>
-                            </select>
-                        </div>
-
-                        {/* Online Only Toggle */}
-                        <div className="flex items-center gap-2">
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={onlineOnly}
-                                    onChange={(e) => setOnlineOnly(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-surface border border-glass-border rounded-full peer peer-checked:bg-primary peer-checked:border-primary transition-colors"></div>
-                                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                            </label>
-                            <span className="text-gray-400 text-sm">Online Only</span>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Results Count */}
-                <div className="flex justify-between items-center mb-6">
-                    <p className="text-gray-400">
-                        {astrologers.length} astrologer{astrologers.length !== 1 ? "s" : ""} found
-                    </p>
+                {/* Hero Title */}
+                <div className="text-center mb-12">
+                    <motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-4xl md:text-5xl font-bold text-white mb-4"
+                    >
+                        Find Your <span className="gradient-text">Guide</span>
+                    </motion.h1>
+                    <p className="text-gray-400">Connect with 500+ verified experts instantly</p>
                 </div>
 
-                {/* Loading State */}
-                {loading && (
-                    <div className="flex justify-center py-20">
-                        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
+                {/* Filters Bar */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass rounded-2xl p-4 mb-8 flex flex-wrap gap-4 items-center justify-between"
+                >
+                    <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                        <select
+                            value={selectedExpertise}
+                            onChange={(e) => setSelectedExpertise(e.target.value)}
+                            className="bg-background-secondary text-white px-4 py-2 rounded-xl border border-glass-border outline-none focus:border-primary transition-colors"
+                        >
+                            {EXPERTISE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
 
-                {/* Error State */}
-                {error && (
-                    <div className="text-center py-20">
-                        <p className="text-red-500">{error}</p>
-                        <button onClick={fetchAstrologers} className="mt-4 text-primary hover:underline">
-                            Try Again
-                        </button>
+                        <select
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                            className="bg-background-secondary text-white px-4 py-2 rounded-xl border border-glass-border outline-none focus:border-primary transition-colors"
+                        >
+                            {LANGUAGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
                     </div>
-                )}
 
-                {/* Empty State */}
-                {!loading && !error && astrologers.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-gray-400 text-lg mb-2">No astrologers found</p>
-                        <p className="text-gray-500 text-sm">Try adjusting your filters</p>
+                    <div className="text-sm text-gray-400">
+                        Showing {astrologers.length} results
                     </div>
-                )}
+                </motion.div>
 
-                {/* Astrologer Grid */}
-                {!loading && !error && astrologers.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {astrologers.map((astrologer, index) => (
-                            <motion.div
-                                key={astrologer.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                            >
-                                <Link href={`/astrologers/${astrologer.id}`}>
-                                    <div className="glass rounded-2xl p-6 hover:border-primary/50 transition-colors cursor-pointer group">
-                                        {/* Profile Header */}
-                                        <div className="flex items-start gap-4 mb-4">
-                                            {/* Avatar */}
-                                            <div className="relative">
-                                                <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
-                                                    {astrologer.display_name?.charAt(0) || "A"}
+                {/* Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {loading ? (
+                        // Show 6 Skeletons while loading
+                        [...Array(6)].map((_, i) => <AstrologerSkeleton key={i} />)
+                    ) : (
+                        <AnimatePresence>
+                            {astrologers.map((astrologer, index) => (
+                                <motion.div
+                                    key={astrologer.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.05 }}
+                                >
+                                    <Link href={`/astrologers/${astrologer.id}`} className="block h-full">
+                                        <div className="glass h-full rounded-2xl p-6 hover:border-primary/50 transition-all hover:-translate-y-1 group relative overflow-hidden">
+                                            {/* Hover Gradient Effect */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                            <div className="relative z-10">
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex gap-4">
+                                                        <div className="w-14 h-14 rounded-full bg-surface border border-glass-border flex items-center justify-center text-xl">
+                                                            {astrologer.display_name[0]}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-bold text-lg text-white group-hover:text-primary transition-colors">
+                                                                {astrologer.display_name}
+                                                            </h3>
+                                                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                                                                <span className="text-yellow-400">★</span>
+                                                                <span>{astrologer.rating}</span>
+                                                                <span>•</span>
+                                                                <span>{astrologer.experience_years} yrs exp</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`w-3 h-3 rounded-full ${astrologer.status === 'online' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-gray-500'}`} />
                                                 </div>
-                                                <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(astrologer.status)} rounded-full border-2 border-background`}></div>
-                                            </div>
 
-                                            {/* Info */}
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
-                                                    {astrologer.display_name}
-                                                </h3>
-                                                <p className="text-gray-400 text-sm">
-                                                    {astrologer.experience_years} years experience
-                                                </p>
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <span className="text-gold">★</span>
-                                                    <span className="text-white font-medium">{astrologer.rating.toFixed(1)}</span>
-                                                    <span className="text-gray-500 text-sm">
-                                                        ({astrologer.total_consultations.toLocaleString()} consultations)
-                                                    </span>
+                                                <div className="flex flex-wrap gap-2 mb-6">
+                                                    {astrologer.expertise.slice(0, 3).map(exp => (
+                                                        <span key={exp} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 text-gray-300 border border-white/5">
+                                                            {exp}
+                                                        </span>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex items-center justify-between mt-auto">
+                                                    <p className="text-white font-semibold">
+                                                        ₹{astrologer.chat_rate}<span className="text-gray-500 text-sm font-normal">/min</span>
+                                                    </p>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault(); // Prevent Link navigation
+                                                            handleChat(Number(astrologer.id), Number(astrologer.chat_rate));
+                                                        }}
+                                                        disabled={astrologer.status !== 'online'}
+                                                        className={`px-4 py-2 font-bold rounded-xl text-sm transition-colors ${astrologer.status === 'online'
+                                                            ? 'bg-white text-background hover:bg-primary hover:text-white'
+                                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                                            }`}
+                                                    >
+                                                        {astrologer.status === 'online' ? 'Chat' : 'Offline'}
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    )}
+                </div>
 
-                                        {/* Expertise Tags */}
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {astrologer.expertise?.slice(0, 3).map((exp) => (
-                                                <span
-                                                    key={exp}
-                                                    className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full"
-                                                >
-                                                    {exp}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        {/* Languages */}
-                                        <p className="text-gray-500 text-sm mb-4">
-                                            Speaks: {astrologer.languages?.join(", ")}
-                                        </p>
-
-                                        {/* Footer */}
-                                        <div className="flex items-center justify-between pt-4 border-t border-glass-border">
-                                            <div>
-                                                <p className="text-gray-400 text-xs">Chat rate</p>
-                                                <p className="text-primary font-bold">₹{astrologer.chat_rate}/min</p>
-                                            </div>
-                                            <button
-                                                className={`px-4 py-2 rounded-xl font-medium text-sm transition-colors ${astrologer.status === "online"
-                                                    ? "bg-gradient-primary text-white"
-                                                    : "bg-gray-700 text-gray-400 cursor-not-allowed"
-                                                    }`}
-                                                disabled={astrologer.status !== "online"}
-                                            >
-                                                {astrologer.status === "online" ? "Chat Now" : getStatusText(astrologer.status)}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </motion.div>
-                        ))}
+                {!loading && astrologers.length === 0 && (
+                    <div className="text-center py-20 text-gray-500">
+                        No astrologers found matching your criteria.
                     </div>
                 )}
             </main>

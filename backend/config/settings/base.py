@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # Local Apps
     'accounts',
     'consultations',
+    'kundli',
 ]
 
 MIDDLEWARE = [

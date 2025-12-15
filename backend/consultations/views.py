@@ -2,7 +2,7 @@ from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts.models import Q
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 
 from .models import Consultation, ChatMessage

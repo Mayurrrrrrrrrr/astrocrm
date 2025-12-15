@@ -21,6 +21,19 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.glass-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: #FF6B35;
+  background: rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+
 /* Gradient text */
 .gradient-text {
   background: linear-gradient(to right, #FF6B35, #FF3366, #7C3AED);

@@ -3,21 +3,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function LoginPage() {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         if (phoneNumber.length < 10) {
-            setError("Please enter a valid 10-digit phone number");
+            toast.error("Please enter a valid 10-digit phone number");
             return;
         }
 
         setLoading(true);
-        setError("");
 
         try {
             const response = await fetch("http://localhost:8000/api/accounts/auth/send-otp/", {
@@ -28,107 +27,124 @@ export default function LoginPage() {
 
             const data = await response.json();
             if (response.ok) {
+                toast.success("OTP Sent!");
                 // Redirect to OTP page
                 window.location.href = `/auth/verify?phone=${data.phone_number}&dev=${data.otp || ""}`;
             } else {
-                setError(data.error || "Failed to send OTP");
+                toast.error(data.error || "Failed to send OTP");
             }
         } catch (err) {
-            setError("Network error. Please try again.");
+            toast.error("Network error. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background-secondary to-surface p-4">
-            {/* Decorative stars */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <span className="absolute top-20 left-10 text-accent text-lg animate-twinkle">✦</span>
-                <span className="absolute top-40 right-20 text-secondary text-sm animate-twinkle" style={{ animationDelay: "1s" }}>✧</span>
-                <span className="absolute bottom-40 left-1/4 text-primary text-xs animate-twinkle" style={{ animationDelay: "2s" }}>✦</span>
-                <span className="absolute top-1/3 right-1/3 text-accent-light text-base animate-twinkle" style={{ animationDelay: "0.5s" }}>✧</span>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-surface flex items-center justify-center p-4">
+            <Toaster position="top-center" />
+            <div className="container max-w-5xl">
+                <div className="flex flex-col lg:flex-row gap-12 items-center">
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-                {/* Logo */}
-                <div className="text-center mb-8">
+                    {/* Left: Branding & Value Prop */}
                     <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: "spring" }}
-                        className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex-1 text-center lg:text-left space-y-8"
                     >
-                        <span className="text-4xl text-white">✦</span>
-                    </motion.div>
-                    <h1 className="text-4xl font-bold text-white mb-2">AstroCRM</h1>
-                    <p className="text-gray-400">Connect with Expert Astrologers</p>
-                </div>
-
-                {/* Card */}
-                <div className="glass rounded-2xl p-8">
-                    <h2 className="text-xl font-semibold text-white mb-1">Login / Sign Up</h2>
-                    <p className="text-gray-400 text-sm mb-6">Enter your phone number to continue</p>
-
-                    <form onSubmit={handleSendOTP}>
-                        {/* Phone Input */}
-                        <div className="flex mb-4">
-                            <div className="bg-surface border border-glass-border rounded-l-xl px-4 flex items-center">
-                                <span className="text-gray-400">+91</span>
-                            </div>
-                            <input
-                                type="tel"
-                                maxLength={10}
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                                placeholder="Phone Number"
-                                className="flex-1 bg-surface border border-glass-border border-l-0 rounded-r-xl px-4 py-4 text-white text-lg tracking-wider outline-none focus:border-primary transition-colors"
-                            />
+                        <div className="inline-flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                            <span className="animate-pulse w-2 h-2 rounded-full bg-green-500"></span>
+                            <span className="text-sm font-medium text-green-400">50+ Astrologers Online</span>
                         </div>
 
-                        {/* Error */}
-                        {error && (
-                            <p className="text-red-500 text-sm mb-4">{error}</p>
-                        )}
+                        <div>
+                            <h1 className="text-5xl lg:text-6xl font-bold leading-tight mb-4">
+                                Connect with the <br />
+                                <span className="gradient-text">Cosmic Wisdom</span>
+                            </h1>
+                            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+                                Join India's most trusted astrology platform. Get instant guidance on career, relationships, and health from verified experts.
+                            </p>
+                        </div>
 
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-primary text-white font-semibold py-4 rounded-xl btn-glow transition-all disabled:opacity-70"
-                        >
-                            {loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                    Sending OTP...
-                                </span>
-                            ) : (
-                                "Send OTP"
-                            )}
-                        </button>
-                    </form>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FeatureCard icon="🔮" title="Live Consultations" desc="Chat or Call instantly" />
+                            <FeatureCard icon="📜" title="Detailed Kundli" desc="Accurate Vedic charts" />
+                            <FeatureCard icon="🔒" title="100% Private" desc="Secure conversations" />
+                            <FeatureCard icon="✨" title="Daily Insights" desc="Personalized horoscope" />
+                        </div>
+                    </motion.div>
 
-                    {/* Terms */}
-                    <p className="text-gray-500 text-xs text-center mt-6">
-                        By continuing, you agree to our{" "}
-                        <Link href="/terms" className="text-primary hover:underline">
-                            Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link href="/privacy" className="text-primary hover:underline">
-                            Privacy Policy
-                        </Link>
-                    </p>
+                    {/* Right: Login Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex-1 w-full max-w-md"
+                    >
+                        <div className="glass rounded-3xl p-8 border border-glass-border shadow-2xl relative overflow-hidden">
+                            {/* Glow */}
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-[50px] rounded-full pointer-events-none"></div>
+
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
+                                <p className="text-gray-400">Enter your mobile number to continue</p>
+                            </div>
+
+                            <form onSubmit={handleSendOTP} className="space-y-6">
+                                <div>
+                                    <label className="block text-gray-500 text-xs uppercase font-bold tracking-wider mb-2">Phone Number</label>
+                                    <div className="flex">
+                                        <div className="bg-surface/50 border border-glass-border rounded-l-xl px-4 flex items-center border-r-0">
+                                            <span className="text-white font-medium">🇮🇳 +91</span>
+                                        </div>
+                                        <input
+                                            type="tel"
+                                            maxLength={10}
+                                            value={phoneNumber}
+                                            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                                            placeholder="98765 43210"
+                                            className="flex-1 glass-input rounded-r-xl px-4 py-4 text-white text-lg tracking-wider"
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-gradient-primary text-white font-bold py-4 rounded-xl shadow-glow hover:scale-[1.02] transition-all disabled:opacity-70"
+                                >
+                                    {loading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                            Sending OTP...
+                                        </span>
+                                    ) : (
+                                        "Get OTP"
+                                    )}
+                                </button>
+                            </form>
+
+                            <p className="text-gray-500 text-xs text-center mt-6">
+                                By continuing, you agree to our <Link href="#" className="text-primary hover:underline">Terms</Link> & <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
+                            </p>
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
+            </div>
+        </div>
+    );
+}
+
+function FeatureCard({ icon, title, desc }: { icon: string, title: string, desc: string }) {
+    return (
+        <div className="bg-surface/30 p-4 rounded-2xl border border-white/5 flex items-start gap-3 hover:bg-white/5 transition-colors">
+            <div className="text-2xl">{icon}</div>
+            <div>
+                <h3 className="text-white font-bold text-sm">{title}</h3>
+                <p className="text-gray-400 text-xs">{desc}</p>
+            </div>
         </div>
     );
 }

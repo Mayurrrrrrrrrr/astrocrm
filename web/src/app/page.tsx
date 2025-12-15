@@ -1,30 +1,33 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function HomePage() {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-background via-background-secondary to-surface relative overflow-hidden">
             {/* Animated background stars */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(20)].map((_, i) => (
+                {[...Array(30)].map((_, i) => (
                     <motion.div
                         key={i}
                         className="absolute text-accent"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,
-                            fontSize: `${Math.random() * 8 + 4}px`,
+                            fontSize: `${Math.random() * 6 + 2}px`,
                         }}
                         animate={{
-                            opacity: [0.2, 0.8, 0.2],
+                            opacity: [0.1, 0.7, 0.1],
                             scale: [1, 1.2, 1],
                         }}
                         transition={{
                             duration: Math.random() * 3 + 2,
                             repeat: Infinity,
-                            delay: Math.random() * 2,
+                            delay: Math.random() * 5,
                         }}
                     >
                         ✦
@@ -32,58 +35,78 @@ export default function HomePage() {
                 ))}
             </div>
 
-            {/* Hero Section */}
-            <div className="container mx-auto px-4 py-20 relative">
-                {/* Nav */}
-                <motion.nav
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between mb-20"
-                >
+            {/* Navigation Bar */}
+            <div className="container mx-auto px-4 py-6 relative z-50">
+                <nav className="flex items-center justify-between glass px-6 py-4 rounded-2xl border border-glass-border">
                     <div className="flex items-center gap-3">
-                        <motion.div
-                            className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                        >
-                            <span className="text-2xl text-white">✦</span>
-                        </motion.div>
-                        <span className="text-2xl font-bold gradient-text">AstroCRM</span>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
+                            <span className="text-xl text-white">✦</span>
+                        </div>
+                        <span className="text-xl font-bold text-white tracking-wide">AstroCRM</span>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/astrologers"
-                            className="hidden sm:inline-block text-gray-300 hover:text-white transition-colors"
-                        >
+
+                    {/* Desktop Menu */}
+                    <div className="hidden md:flex items-center gap-8">
+                        <Link href="/astrologers" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
                             Astrologers
+                        </Link>
+                        <Link href="/services" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
+                            Services
                         </Link>
                         <Link
                             href="/auth/login"
-                            className="px-6 py-2.5 glass text-white rounded-full font-medium hover:border-primary/50 transition-all"
+                            className="px-6 py-2 bg-gradient-primary text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-glow transition-all hover:scale-105"
                         >
                             Login
                         </Link>
                     </div>
-                </motion.nav>
 
-                {/* Hero Content */}
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="md:hidden text-white text-2xl"
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    >
+                        {isMenuOpen ? '✕' : '☰'}
+                    </button>
+                </nav>
+
+                {/* Mobile Dropdown */}
+                <AnimatePresence>
+                    {isMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-24 left-4 right-4 glass rounded-2xl p-6 border border-glass-border md:hidden flex flex-col gap-4"
+                        >
+                            <Link href="/astrologers" className="text-white text-lg font-medium p-2">Astrologers</Link>
+                            <Link href="/services" className="text-white text-lg font-medium p-2">Services</Link>
+                            <Link
+                                href="/auth/login"
+                                className="bg-gradient-primary text-white text-center py-3 rounded-xl font-bold"
+                            >
+                                Login / Sign Up
+                            </Link>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Hero Section */}
+            <div className="container mx-auto px-4 pt-10 pb-20 relative z-10">
                 <div className="text-center max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                            Connect with{" "}
-                            <span className="gradient-text inline-block">
-                                <motion.span
-                                    animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                                    transition={{ duration: 5, repeat: Infinity }}
-                                    style={{
-                                        backgroundSize: "200% auto",
-                                    }}
-                                >
-                                    Expert Astrologers
-                                </motion.span>
+                        <div className="inline-block px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-semibold mb-6">
+                            ✨ #1 Trusted Astrology Platform
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+                            Find Clarity with <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500">
+                                Vedic Wisdom
                             </span>
                         </h1>
                     </motion.div>
@@ -92,11 +115,10 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed"
+                        className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed"
                     >
-                        Get personalized consultations from verified Vedic astrologers.
-                        <br className="hidden md:block" />
-                        Chat, call, or get your Kundli made online.
+                        Connect instantly with verified astrologers via chat or call.
+                        Get accurate predictions about your career, love life, and future.
                     </motion.p>
 
                     <motion.div
@@ -107,212 +129,40 @@ export default function HomePage() {
                     >
                         <Link
                             href="/auth/login"
-                            className="group relative px-8 py-4 bg-gradient-primary text-white font-semibold rounded-xl btn-glow transition-all hover:scale-105"
+                            className="w-full sm:w-auto px-8 py-4 bg-gradient-primary text-white font-bold rounded-xl shadow-glow hover:shadow-glow-purple transition-all hover:-translate-y-1"
                         >
-                            <span className="relative z-10">Start Free Consultation</span>
-                            <motion.div
-                                className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"
-                            />
+                            Chat with Astrologer
                         </Link>
                         <Link
                             href="/astrologers"
-                            className="px-8 py-4 glass text-white font-semibold rounded-xl hover:border-primary/50 transition-all hover:scale-105"
+                            className="w-full sm:w-auto px-8 py-4 glass border border-glass-border text-white font-semibold rounded-xl hover:bg-white/5 transition-all"
                         >
-                            Browse Astrologers
+                            View All Experts
                         </Link>
-                    </motion.div>
-
-                    {/* Trust Badge */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="mt-8 flex items-center justify-center gap-6 text-sm text-gray-400"
-                    >
-                        <div className="flex items-center gap-2">
-                            <span className="text-green-400">✓</span>
-                            <span>100% Verified</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-green-400">✓</span>
-                            <span>Secure Payments</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-green-400">✓</span>
-                            <span>24/7 Support</span>
-                        </div>
                     </motion.div>
                 </div>
 
-                {/* Stats */}
+                {/* Stats Grid */}
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-24"
+                    transition={{ delay: 0.8 }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20"
                 >
                     {[
-                        { value: "500+", label: "Expert Astrologers", icon: "👨‍🏫" },
-                        { value: "50K+", label: "Happy Customers", icon: "😊" },
-                        { value: "4.8★", label: "App Rating", icon: "⭐" },
-                        { value: "24/7", label: "Availability", icon: "🕐" },
+                        { value: "500+", label: "Astrologers", icon: "🧙‍♂️" },
+                        { value: "50k+", label: "Users", icon: "👥" },
+                        { value: "4.9", label: "Rating", icon: "⭐" },
+                        { value: "24/7", label: "Support", icon: "🎧" },
                     ].map((stat, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1 + i * 0.1 }}
-                            whileHover={{ scale: 1.05, y: -5 }}
-                            className="glass rounded-2xl p-6 text-center group cursor-pointer"
-                        >
-                            <div className="text-4xl mb-2 transition-transform group-hover:scale-110">
-                                {stat.icon}
-                            </div>
-                            <div className="text-3xl md:text-4xl font-bold gradient-text mb-1">
-                                {stat.value}
-                            </div>
-                            <div className="text-gray-400 text-sm">{stat.label}</div>
-                        </motion.div>
+                        <div key={i} className="glass p-6 rounded-2xl border border-glass-border text-center hover:bg-white/5 transition-colors">
+                            <div className="text-3xl mb-2">{stat.icon}</div>
+                            <div className="text-2xl font-bold text-white">{stat.value}</div>
+                            <div className="text-sm text-gray-500 uppercase tracking-wider font-medium">{stat.label}</div>
+                        </div>
                     ))}
                 </motion.div>
-
-                {/* Features */}
-                <div className="mt-40">
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-4xl md:text-5xl font-bold text-white text-center mb-16"
-                    >
-                        Why Choose{" "}
-                        <span className="gradient-text">AstroCRM</span>?
-                    </motion.h2>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            {
-                                icon: "🌟",
-                                title: "Verified Astrologers",
-                                desc: "All our astrologers undergo rigorous video KYC verification for your safety",
-                                color: "from-yellow-500 to-orange-500",
-                            },
-                            {
-                                icon: "💬",
-                                title: "Instant Chat",
-                                desc: "Connect with available astrologers in seconds and get immediate guidance",
-                                color: "from-blue-500 to-cyan-500",
-                            },
-                            {
-                                icon: "📊",
-                                title: "Free Kundli",
-                                desc: "Get your detailed birth chart generated instantly with accurate predictions",
-                                color: "from-purple-500 to-pink-500",
-                            },
-                        ].map((feature, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.2 }}
-                                whileHover={{ y: -10 }}
-                                className="glass rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden"
-                            >
-                                {/* Gradient background on hover */}
-                                <div
-                                    className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                                />
-
-                                <div className="relative z-10">
-                                    <motion.div
-                                        className="text-6xl mb-6 inline-block"
-                                        whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.2 }}
-                                        transition={{ duration: 0.5 }}
-                                    >
-                                        {feature.icon}
-                                    </motion.div>
-                                    <h3 className="text-2xl font-semibold text-white mb-4 group-hover:text-primary transition-colors">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-gray-300 leading-relaxed">{feature.desc}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* CTA Section */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="mt-32 glass rounded-3xl p-12 md:p-16 text-center relative overflow-hidden"
-                >
-                    {/* Decorative gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 opacity-50" />
-
-                    <div className="relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                            Ready to Get Started?
-                        </h2>
-                        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                            Join thousands of satisfied customers. Get your first 5 minutes FREE!
-                        </p>
-                        <Link
-                            href="/auth/login"
-                            className="inline-block px-10 py-5 bg-gradient-primary text-white text-lg font-bold rounded-xl btn-glow transition-all hover:scale-105"
-                        >
-                            Talk to an Astrologer Now
-                        </Link>
-                    </div>
-                </motion.div>
             </div>
-
-            {/* Footer */}
-            <motion.footer
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="border-t border-glass-border mt-20 py-12 relative"
-            >
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-4 gap-8 mb-8">
-                        <div>
-                            <h3 className="text-white font-semibold mb-4">AstroCRM</h3>
-                            <p className="text-gray-400 text-sm">
-                                Your trusted platform for authentic astrological guidance.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="text-white font-medium mb-4">Services</h4>
-                            <ul className="space-y-2 text-sm text-gray-400">
-                                <li><Link href="/astrologers" className="hover:text-primary">Chat with Astrologers</Link></li>
-                                <li><Link href="/astrologers" className="hover:text-primary">Call Consultation</Link></li>
-                                <li><Link href="/" className="hover:text-primary">Free Kundli</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-white font-medium mb-4">Company</h4>
-                            <ul className="space-y-2 text-sm text-gray-400">
-                                <li><Link href="/" className="hover:text-primary">About Us</Link></li>
-                                <li><Link href="/" className="hover:text-primary">Contact</Link></li>
-                                <li><Link href="/" className="hover:text-primary">Careers</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-white font-medium mb-4">Legal</h4>
-                            <ul className="space-y-2 text-sm text-gray-400">
-                                <li><Link href="/terms" className="hover:text-primary">Terms of Service</Link></li>
-                                <li><Link href="/privacy" className="hover:text-primary">Privacy Policy</Link></li>
-                                <li><Link href="/" className="hover:text-primary">Refund Policy</Link></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="text-center text-gray-500 text-sm pt-8 border-t border-glass-border">
-                        © 2024 AstroCRM. All rights reserved.
-                    </div>
-                </div>
-            </motion.footer>
         </div>
     );
 }
