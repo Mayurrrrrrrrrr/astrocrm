@@ -8,10 +8,11 @@ import {
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics'; // PREMIUM FEEL
+// import * as Haptics from 'expo-haptics'; // Commented out to prevent crashes if not installed/linked correctly
+// const API_BASE = 'http://192.168.29.35:8000/api'; // Replace with your IP
 
-// REPLACE WITH YOUR PC IP
-const API_BASE = 'http://192.168.29.35:8000/api';
+// Use 10.0.2.2 for Android Emulator, or your LAN IP for physical device
+const API_BASE = 'http://10.0.2.2:8000/api';
 
 const theme = {
     colors: {
@@ -31,7 +32,7 @@ export default function App() {
 
     const handleSendOTP = async () => {
         // Tactile feedback
-        Haptics.selectionAsync();
+        // Haptics.selectionAsync();
         Keyboard.dismiss();
 
         if (phoneNumber.length < 10) {
@@ -43,14 +44,14 @@ export default function App() {
         setLoading(true);
         try {
             const res = await axios.post(`${API_BASE}/accounts/auth/send-otp/`, { phone_number: phoneNumber });
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
             // For dev purposes, show OTP in alert if returned
             if (res.data.otp) Alert.alert("Dev OTP", String(res.data.otp));
 
             setStep('otp');
         } catch (err) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert('Error', 'Could not connect. Ensure Backend is running and IP is correct.');
         } finally {
             setLoading(false);
@@ -58,15 +59,15 @@ export default function App() {
     };
 
     const handleVerifyOTP = async () => {
-        Haptics.selectionAsync();
+        // Haptics.selectionAsync();
         Keyboard.dismiss();
         setLoading(true);
         try {
             await axios.post(`${API_BASE}/accounts/auth/verify-otp/`, { phone_number: phoneNumber, otp });
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setStep('home');
         } catch (err) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert('Error', 'Invalid OTP');
         } finally {
             setLoading(false);

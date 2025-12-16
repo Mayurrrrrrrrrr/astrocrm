@@ -2,7 +2,32 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Auth Button Component
+function AuthButton() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        setIsLoggedIn(!!localStorage.getItem("accessToken"));
+    }, []);
+
+    return isLoggedIn ? (
+        <Link
+            href="/dashboard"
+            className="px-6 py-2 bg-green-500 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-glow-green transition-all hover:scale-105"
+        >
+            Dashboard
+        </Link>
+    ) : (
+        <Link
+            href="/auth/login"
+            className="px-6 py-2 bg-gradient-primary text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-glow transition-all hover:scale-105"
+        >
+            Login
+        </Link>
+    );
+}
 
 export default function HomePage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -53,12 +78,7 @@ export default function HomePage() {
                         <Link href="/services" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
                             Services
                         </Link>
-                        <Link
-                            href="/auth/login"
-                            className="px-6 py-2 bg-gradient-primary text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-glow transition-all hover:scale-105"
-                        >
-                            Login
-                        </Link>
+                        <AuthButton />
                     </div>
 
                     {/* Mobile Menu Toggle */}
@@ -81,12 +101,7 @@ export default function HomePage() {
                         >
                             <Link href="/astrologers" className="text-white text-lg font-medium p-2">Astrologers</Link>
                             <Link href="/services" className="text-white text-lg font-medium p-2">Services</Link>
-                            <Link
-                                href="/auth/login"
-                                className="bg-gradient-primary text-white text-center py-3 rounded-xl font-bold"
-                            >
-                                Login / Sign Up
-                            </Link>
+                            <AuthButton />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -127,12 +142,7 @@ export default function HomePage() {
                         transition={{ delay: 0.6 }}
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                     >
-                        <Link
-                            href="/auth/login"
-                            className="w-full sm:w-auto px-8 py-4 bg-gradient-primary text-white font-bold rounded-xl shadow-glow hover:shadow-glow-purple transition-all hover:-translate-y-1"
-                        >
-                            Chat with Astrologer
-                        </Link>
+                        <AuthButton />
                         <Link
                             href="/astrologers"
                             className="w-full sm:w-auto px-8 py-4 glass border border-glass-border text-white font-semibold rounded-xl hover:bg-white/5 transition-all"
