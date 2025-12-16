@@ -78,6 +78,9 @@ export default function HomePage() {
                         <Link href="/services" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
                             Services
                         </Link>
+                        <Link href="/blog" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
+                            Blog
+                        </Link>
                         <AuthButton />
                     </div>
 

@@ -20,6 +20,7 @@ urlpatterns = [
     # API URLs
     path('api/accounts/', include('accounts.urls')),
     path('api/kundli/', include('kundli.urls')),
+    path('api/blog/', include('blog.urls')),
     
     # Fixed: 'consultation' vs 'consultations' typo. Using the installed app name.
     path('api/consultations/', include('consultations.urls')),

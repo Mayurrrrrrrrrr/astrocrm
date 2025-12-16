@@ -22,7 +22,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const menuItems = [
         { icon: "📊", label: "Overview", href: "/dashboard" },
         { icon: "💬", label: "Consultations", href: "/dashboard/consultations" },
-        { icon: "📜", label: "My Kundlis", href: "/kundli" }, // Reusing the kundli module
+        { icon: "📜", label: "My Kundlis", href: "/kundli" },
+        { icon: "📖", label: "Wisdom", href: "/blog" },
         { icon: "❤️", label: "Favorites", href: "/astrologers?filter=favorites" },
         { icon: "⚙️", label: "Profile", href: "/dashboard/profile" },
     ];

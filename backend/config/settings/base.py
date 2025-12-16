@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'accounts',
     'consultations',
     'kundli',
+    'blog',
 ]
 
 MIDDLEWARE = [
